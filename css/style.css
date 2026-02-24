@@ -5,30 +5,57 @@
 }
 
 body {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    background: radial-gradient(circle, #2d4d22 0%, #000000 100%);
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     font-family: 'Courier New', monospace;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 #game-container {
     position: relative;
-    background: #1a1a2e;
-    border: 8px solid #e94560;
-    border-radius: 8px;
+    background: #c2c5c6;
+    border: 12px solid #a3a7a9;
+    border-radius: 10px 10px 60px 10px;
     box-shadow: 
-        0 0 0 4px #0f3460,
-        0 0 60px rgba(233, 69, 96, 0.4),
-        inset 0 0 30px rgba(0, 0, 0, 0.5);
+        10px 10px 0 #5e6163,
+        20px 20px 40px rgba(0, 0, 0, 0.5);
+    padding: 20px 20px 40px 20px;
+    margin-bottom: 20px;
 }
 
-#game-canvas {
-    display: block;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
+footer {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    border: 1px solid #78c850;
+    text-align: center;
+    color: #ffffff;
+    width: 95%;
+    max-width: 500px;
+    font-size: 11px;
+    line-height: 1.4;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+footer p {
+    margin: 4px 0;
+}
+
+footer a {
+    color: #78c850;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+footer a:hover {
+    color: #ffd93d;
+    text-decoration: underline;
 }
 
 #ui-overlay {
@@ -49,26 +76,28 @@ body {
 
 #title-bar {
     position: absolute;
-    top: -40px;
+    top: -60px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
 }
 
 #title-bar h1 {
-    color: #e94560;
-    font-size: 24px;
-    text-shadow: 2px 2px 0 #0f3460, 0 0 20px rgba(233, 69, 96, 0.5);
-    letter-spacing: 4px;
+    color: #ffd93d;
+    font-size: 32px;
+    text-shadow: 3px 3px 0 #000;
+    letter-spacing: 2px;
+    font-weight: 900;
 }
 
 #title-bar .hearts {
-    color: #e94560;
-    font-size: 18px;
-    animation: pulse 1s ease-in-out infinite;
+    color: #ff4757;
+    font-size: 24px;
+    text-shadow: 2px 2px 0 #000;
+    animation: pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes pulse {

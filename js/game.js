@@ -8,13 +8,29 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 const COLORS = {
-    darkest: '#0f380f',
-    dark: '#306230',
-    light: '#8bac0f',
-    lightest: '#9bbc0f',
-    white: '#9bbc0f',
-    red: '#8b0000',
-    blue: '#00008b'
+    // Nature
+    grass: '#78c850',
+    grassDark: '#5ea040',
+    water: '#6890f0',
+    waterDark: '#445e91',
+    sand: '#f8d030',
+    rock: '#a8a878',
+    tree: '#2d4d22',
+    
+    // UI & General
+    darkest: '#000000',
+    dark: '#555555',
+    light: '#aaaaaa',
+    lightest: '#ffffff',
+    
+    // Battle specific
+    hpGreen: '#78c850',
+    hpYellow: '#f8d030',
+    hpRed: '#f08030',
+    
+    // Branding
+    red: '#ff0000',
+    blue: '#0000ff'
 };
 
 const TILE_SIZE = 32;
@@ -152,10 +168,10 @@ class Map {
 
     getTileColor(tileType) {
         switch (tileType) {
-            case TILE_TYPES.GRASS: return COLORS.dark;
-            case TILE_TYPES.FLOOR: return COLORS.light;
-            case TILE_TYPES.WALL: return COLORS.darkest;
-            case TILE_TYPES.WATER: return COLORS.darkest;
+            case TILE_TYPES.GRASS: return COLORS.grass;
+            case TILE_TYPES.FLOOR: return COLORS.sand;
+            case TILE_TYPES.WALL: return COLORS.tree;
+            case TILE_TYPES.WATER: return COLORS.water;
             default: return COLORS.light;
         }
     }
@@ -187,27 +203,30 @@ class Map {
     }
 
     renderGrassDetail(ctx, x, y) {
-        ctx.fillStyle = COLORS.darkest;
+        ctx.fillStyle = COLORS.grassDark;
         const seed = (x * 7 + y * 13) % 10;
-        for (let i = 0; i < 3; i++) {
-            const gx = x + ((seed + i * 3) % 24) + 4;
-            const gy = y + ((seed + i * 7) % 24) + 4;
-            ctx.fillRect(gx, gy, 2, 4);
-        }
+        // Draw small grass tufts
+        ctx.fillRect(x + 8, y + 10, 2, 6);
+        ctx.fillRect(x + 6, y + 12, 2, 4);
+        ctx.fillRect(x + 22, y + 18, 2, 6);
+        ctx.fillRect(x + 20, y + 20, 2, 4);
     }
 
     renderWaterDetail(ctx, x, y) {
-        ctx.fillStyle = COLORS.light;
-        const waveOffset = (Date.now() / 500 + x + y) % 8;
-        ctx.fillRect(x + waveOffset, y + 8, 8, 2);
-        ctx.fillRect(x + 16 - waveOffset, y + 20, 8, 2);
+        ctx.fillStyle = COLORS.lightest;
+        ctx.globalAlpha = 0.4;
+        const waveOffset = (Date.now() / 600 + x + y) % 12;
+        ctx.fillRect(x + waveOffset, y + 10, 10, 2);
+        ctx.fillRect(x + 16 - waveOffset, y + 22, 10, 2);
+        ctx.globalAlpha = 1.0;
     }
 
     renderFloorDetail(ctx, x, y) {
-        ctx.fillStyle = COLORS.dark;
-        ctx.fillRect(x + 2, y + 2, 2, 2);
-        ctx.fillRect(x + 20, y + 12, 2, 2);
-        ctx.fillRect(x + 10, y + 24, 2, 2);
+        ctx.fillStyle = COLORS.grass;
+        // Small pebbles or dirt spots
+        ctx.fillRect(x + 4, y + 6, 2, 2);
+        ctx.fillRect(x + 24, y + 14, 2, 2);
+        ctx.fillRect(x + 12, y + 26, 2, 2);
     }
 }
 
@@ -389,30 +408,81 @@ class Player {
     render(ctx, cameraX, cameraY) {
         const x = this.renderX - cameraX;
         const y = this.renderY - cameraY;
+        const skin = '#ffdbac';
+        const shirt = '#3d7dca';
+        const pants = '#333333';
+        const shoes = '#552200';
+        const outline = '#000000';
 
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(x + 4, y + 28, 24, 6);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(x + 16, y + 28, 10, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        ctx.fillStyle = COLORS.dark;
-        ctx.fillRect(x + 6, y + 14, 20, 14);
+        const bounce = this.isMoving ? Math.abs(Math.sin(this.moveProgress * Math.PI)) * 2 : 0;
+        const renderY = y - bounce;
 
+        // Draw character with outline
+        ctx.fillStyle = outline;
+        // Head outline
+        ctx.fillRect(x + 9, renderY + 3, 14, 12);
+        // Body outline
+        ctx.fillRect(x + 7, renderY + 13, 18, 12);
+        // Arms outline
+        if (this.isMoving) {
+            const armSwing = Math.sin(this.moveProgress * Math.PI) * 4;
+            ctx.fillRect(x + 3, renderY + 13 + armSwing, 6, 8);
+            ctx.fillRect(x + 23, renderY + 13 - armSwing, 6, 8);
+        } else {
+            ctx.fillRect(x + 3, renderY + 13, 6, 10);
+            ctx.fillRect(x + 23, renderY + 13, 6, 10);
+        }
+        // Legs outline
+        ctx.fillRect(x + 7, renderY + 23, 18, 10);
+
+        // Head (Bald)
+        ctx.fillStyle = skin;
+        ctx.fillRect(x + 10, renderY + 4, 12, 10); // Face/Head
+        
+        // Eyes
         ctx.fillStyle = COLORS.darkest;
-        ctx.fillRect(x + 4, y + 2, 24, 14);
-
-        ctx.fillStyle = COLORS.lightest;
         if (this.direction === DIRECTIONS.DOWN) {
-            ctx.fillRect(x + 8, y + 8, 3, 3);
-            ctx.fillRect(x + 21, y + 8, 3, 3);
+            ctx.fillRect(x + 12, renderY + 9, 2, 2);
+            ctx.fillRect(x + 18, renderY + 9, 2, 2);
+        } else if (this.direction === DIRECTIONS.UP) {
+            // No eyes visible from back
         } else if (this.direction === DIRECTIONS.LEFT) {
-            ctx.fillRect(x + 6, y + 8, 3, 3);
+            ctx.fillRect(x + 10, renderY + 9, 2, 2);
         } else if (this.direction === DIRECTIONS.RIGHT) {
-            ctx.fillRect(x + 23, y + 8, 3, 3);
+            ctx.fillRect(x + 20, renderY + 9, 2, 2);
         }
 
-        ctx.fillStyle = COLORS.darkest;
-        const legOffset = this.isMoving ? (this.walkFrame === 0 ? 2 : -2) : 0;
-        ctx.fillRect(x + 8, y + 26, 6, 6 + legOffset);
-        ctx.fillRect(x + 18, y + 26, 6, 6 - legOffset);
+        // Body/Shirt
+        ctx.fillStyle = shirt;
+        ctx.fillRect(x + 8, renderY + 14, 16, 10);
+        
+        // Arms
+        ctx.fillStyle = skin;
+        if (this.isMoving) {
+            const armSwing = Math.sin(this.moveProgress * Math.PI) * 4;
+            ctx.fillRect(x + 4, renderY + 14 + armSwing, 4, 6);
+            ctx.fillRect(x + 24, renderY + 14 - armSwing, 4, 6);
+        } else {
+            ctx.fillRect(x + 4, renderY + 14, 4, 8);
+            ctx.fillRect(x + 24, renderY + 14, 4, 8);
+        }
+
+        // Pants
+        ctx.fillStyle = pants;
+        ctx.fillRect(x + 8, renderY + 24, 7, 6);
+        ctx.fillRect(x + 17, renderY + 24, 7, 6);
+
+        // Shoes
+        ctx.fillStyle = shoes;
+        const legOffset = this.isMoving ? (this.walkFrame === 0 ? 3 : -3) : 0;
+        ctx.fillRect(x + 8, renderY + 29 + (this.isMoving ? legOffset : 0), 7, 3);
+        ctx.fillRect(x + 17, renderY + 29 + (this.isMoving ? -legOffset : 0), 7, 3);
     }
 
     toJSON() {
@@ -655,26 +725,37 @@ class BattleSystem {
     onBattleEnd = null;
 
     render(ctx) {
-        ctx.fillStyle = COLORS.lightest;
+        // Battle Background
+        ctx.fillStyle = '#f8f8f8';
         ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        
+        // Clouds/Scenery
+        ctx.fillStyle = '#e0e0e0';
+        ctx.fillRect(100, 40, 150, 40);
+        ctx.fillRect(400, 80, 120, 30);
+        
+        // Ground circles
+        ctx.fillStyle = '#d0d0d0';
+        ctx.beginPath();
+        ctx.ellipse(150, 240, 100, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(480, 140, 100, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        ctx.fillStyle = COLORS.dark;
-        ctx.fillRect(50, 200, 200, 80);
-        ctx.fillRect(390, 100, 200, 80);
-
-        this.renderCreature(ctx, this.enemy, 440, 60, 1.5, this.damageFlash > 0);
+        this.renderCreature(ctx, this.enemy, 440, 60, 1.8, this.damageFlash > 0);
 
         if (this.playerCreature) {
-            this.renderCreature(ctx, this.playerCreature, 100, 180, 1.2, false);
+            this.renderCreature(ctx, this.playerCreature, 100, 160, 2.0, false);
         } else {
-            this.renderPlayerSprite(ctx, 150, 200);
+            // If no creature, render the bald protagonist from back
+            this.renderPlayerBack(ctx, 100, 160);
         }
 
-        this.renderHpBar(ctx, this.player, 20, 20, 'JUGADOR');
-        this.renderHpBar(ctx, this.enemy, 380, 20, this.enemy.name);
+        this.renderHpBar(ctx, this.player, 50, 30, 'JUGADOR');
+        this.renderHpBar(ctx, this.enemy, 380, 210, this.enemy.name);
 
         this.renderBattleLog(ctx);
-
         this.renderActionMenu(ctx);
 
         if (this.damageFlash > 0) {
@@ -682,101 +763,170 @@ class BattleSystem {
         }
     }
 
+    renderPlayerBack(ctx, x, y) {
+        const skin = '#ffdbac';
+        const shirt = '#3d7dca';
+        const shirtDark = '#2a558e';
+        const backpack = '#8b4513';
+        
+        // Shadow on ground
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath();
+        ctx.ellipse(x + 32, y + 80, 40, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outline
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x + 18, y - 2, 28, 28); // Head outline
+        ctx.fillRect(x - 2, y + 22, 68, 44); // Body outline
+
+        // Head (Bald)
+        ctx.fillStyle = skin;
+        ctx.fillRect(x + 20, y, 24, 24);
+        
+        // Shirt (Back)
+        ctx.fillStyle = shirt;
+        ctx.fillRect(x, y + 24, 64, 40);
+        
+        // Shading on shirt
+        ctx.fillStyle = shirtDark;
+        ctx.fillRect(x, y + 54, 64, 10);
+        
+        // Backpack
+        ctx.fillStyle = backpack;
+        ctx.fillRect(x + 12, y + 30, 40, 25);
+        ctx.fillStyle = '#5d2e0d';
+        ctx.fillRect(x + 15, y + 45, 34, 5);
+    }
+
     renderCreature(ctx, creature, x, y, scale, flash) {
         const size = 32 * scale;
         
+        ctx.save();
+        ctx.translate(x, y);
+        
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath();
+        ctx.ellipse(size/2, size + 10, size/2, size/6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         if (flash) {
-            ctx.fillStyle = COLORS.white;
-        } else {
-            ctx.fillStyle = creature.color;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-2, -2, size + 4, size + 4);
+            ctx.restore();
+            return;
         }
 
-        ctx.fillRect(x, y + size * 0.3, size, size * 0.5);
-        ctx.fillRect(x + size * 0.1, y, size * 0.8, size * 0.4);
+        // Outline
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-2, size * 0.18, size + 4, size * 0.74);
+        ctx.fillRect(size * 0.08, -2, size * 0.84, size * 0.44);
 
-        ctx.fillStyle = COLORS.darkest;
-        ctx.fillRect(x + size * 0.2, y + size * 0.15, size * 0.15, size * 0.1);
-        ctx.fillRect(x + size * 0.55, y + size * 0.15, size * 0.15, size * 0.1);
+        // Body
+        ctx.fillStyle = creature.color;
+        ctx.fillRect(0, size * 0.2, size, size * 0.7);
+        // Head
+        ctx.fillRect(size * 0.1, 0, size * 0.8, size * 0.4);
+        
+        // Eyes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(size * 0.2, size * 0.1, size * 0.2, size * 0.15);
+        ctx.fillRect(size * 0.6, size * 0.1, size * 0.2, size * 0.15);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(size * 0.25, size * 0.12, size * 0.1, size * 0.1);
+        ctx.fillRect(size * 0.65, size * 0.12, size * 0.1, size * 0.1);
 
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(x + 10, y + size * 0.85, size - 20, 8);
-    }
+        // Belly/Detail
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillRect(size * 0.2, size * 0.4, size * 0.6, size * 0.4);
 
-    renderPlayerSprite(ctx, x, y) {
-        ctx.fillStyle = COLORS.dark;
-        ctx.fillRect(x + 10, y + 30, 40, 30);
-        ctx.fillStyle = COLORS.darkest;
-        ctx.fillRect(x + 8, y + 5, 44, 30);
-        ctx.fillStyle = COLORS.lightest;
-        ctx.fillRect(x + 14, y + 15, 6, 6);
-        ctx.fillRect(x + 38, y + 15, 6, 6);
+        ctx.restore();
     }
 
     renderHpBar(ctx, entity, x, y, label) {
-        const barWidth = 200;
-        const barHeight = 20;
+        const barWidth = 180;
+        const barHeight = 12;
 
+        // Box
+        ctx.fillStyle = COLORS.lightest;
+        ctx.fillRect(x - 5, y - 5, barWidth + 20, 45);
+        ctx.strokeStyle = COLORS.darkest;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 5, y - 5, barWidth + 20, 45);
+
+        // Label & Level
         ctx.fillStyle = COLORS.darkest;
-        ctx.font = 'bold 14px Courier New';
-        ctx.fillText(label, x, y + 14);
+        ctx.font = 'bold 16px "Courier New"';
+        ctx.fillText(label.toUpperCase(), x, y + 12);
+        
+        ctx.font = '12px "Courier New"';
+        const hpText = `${Math.ceil(entity.currentHp)}/${entity.maxHp}`;
+        ctx.fillText(hpText, x + barWidth - 30, y + 36);
 
-        const hpText = `${entity.currentHp}/${entity.maxHp}`;
-        ctx.fillText(hpText, x + barWidth - 60, y + 14);
-
+        // HP Background
         ctx.fillStyle = COLORS.dark;
-        ctx.fillRect(x, y + 20, barWidth, barHeight);
+        ctx.fillRect(x, y + 18, barWidth, barHeight);
 
         const hpPercent = entity.getHpPercent();
         const fillWidth = (barWidth - 4) * hpPercent;
         
-        ctx.fillStyle = hpPercent > 0.5 ? COLORS.light : (hpPercent > 0.25 ? '#8bac0f' : COLORS.darkest);
-        ctx.fillRect(x + 2, y + 22, fillWidth, barHeight - 4);
+        // HP Color
+        if (hpPercent > 0.5) ctx.fillStyle = COLORS.hpGreen;
+        else if (hpPercent > 0.2) ctx.fillStyle = COLORS.hpYellow;
+        else ctx.fillStyle = COLORS.hpRed;
+        
+        ctx.fillRect(x + 2, y + 20, fillWidth, barHeight - 4);
 
         ctx.strokeStyle = COLORS.darkest;
         ctx.lineWidth = 2;
-        ctx.strokeRect(x, y + 20, barWidth, barHeight);
+        ctx.strokeRect(x, y + 18, barWidth, barHeight);
     }
 
     renderBattleLog(ctx) {
-        const boxY = CANVAS_HEIGHT - 120;
+        const boxY = CANVAS_HEIGHT - 100;
         
         ctx.fillStyle = COLORS.lightest;
-        ctx.fillRect(10, boxY, CANVAS_WIDTH - 20, 110);
+        ctx.fillRect(5, boxY, CANVAS_WIDTH - 10, 95);
         
         ctx.strokeStyle = COLORS.darkest;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(10, boxY, CANVAS_WIDTH - 20, 110);
+        ctx.lineWidth = 4;
+        ctx.strokeRect(5, boxY, CANVAS_WIDTH - 10, 95);
 
         ctx.fillStyle = COLORS.darkest;
-        ctx.font = 'bold 14px Courier New';
+        ctx.font = 'bold 18px "Courier New"';
         
-        this.battleLog.forEach((log, i) => {
-            ctx.fillText(log, 20, boxY + 25 + i * 22);
+        this.battleLog.slice(-3).forEach((log, i) => {
+            ctx.fillText(log, 25, boxY + 30 + i * 25);
         });
     }
 
     renderActionMenu(ctx) {
         if (this.turn !== 'player' || this.state !== 'select') return;
 
-        const menuX = CANVAS_WIDTH - 160;
-        const menuY = CANVAS_HEIGHT - 130;
+        const menuX = CANVAS_WIDTH - 180;
+        const menuY = CANVAS_HEIGHT - 210;
 
         ctx.fillStyle = COLORS.lightest;
-        ctx.fillRect(menuX, menuY, 150, 120);
+        ctx.fillRect(menuX, menuY, 175, 105);
         
         ctx.strokeStyle = COLORS.darkest;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(menuX, menuY, 150, 120);
+        ctx.lineWidth = 4;
+        ctx.strokeRect(menuX, menuY, 175, 105);
 
         ctx.fillStyle = COLORS.darkest;
-        ctx.font = 'bold 16px Courier New';
+        ctx.font = 'bold 18px "Courier New"';
         
         const actions = ['ATACAR', 'CAPTURAR', 'HUIR'];
         actions.forEach((action, i) => {
-            ctx.fillText(action, menuX + 15, menuY + 30 + i * 35);
+            const tx = menuX + 35;
+            const ty = menuY + 30 + i * 30;
+            ctx.fillText(action, tx, ty);
+            
+            if (i === this.selectedAction) {
+                ctx.fillText('▶', tx - 20, ty);
+            }
         });
-
-        ctx.fillText('▶', menuX - 15, menuY + 30 + this.selectedAction * 35);
     }
 
     selectedAction = 0;
